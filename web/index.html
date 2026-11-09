@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#17251c">
+  <title>Block World — 3D Sandbox</title>
+  <link rel="stylesheet" href="/style.css">
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js",
+        "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/"
+      }
+    }
+  </script>
+  <script type="module" src="/game.js"></script>
+</head>
+<body>
+  <main id="game">
+    <div id="world" aria-label="3D block world"></div>
+    <header class="topbar">
+      <a class="brand" href="/" aria-label="Block World home">
+        <span class="brand-icon" aria-hidden="true">▦</span>
+        <span>BLOCK<span class="brand-light">WORLD</span></span>
+      </a>
+      <span class="world-status"><span class="status-dot"></span> SINGLE-PLAYER WORLD</span>
+    </header>
+
+    <section class="help-card" aria-label="Game controls">
+      <p class="eyebrow">HOW TO PLAY</p>
+      <p><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> <span>Move</span></p>
+      <p><kbd>SPACE</kbd> <span>Jump</span></p>
+      <p><kbd>SHIFT</kbd> <span>Walk slowly</span></p>
+      <p><kbd>CTRL</kbd> <span>Crouch</span></p>
+      <p><kbd>HOLD CLICK</kbd> <span>Break block</span></p>
+      <p><kbd>RIGHT CLICK</kbd> <span>Place block</span></p>
+      <p><kbd>1</kbd> — <kbd>6</kbd> <span>Choose block</span></p>
+      <p><kbd>ESC</kbd> <span>Pause / release mouse</span></p>
+    </section>
+
+    <div class="reticle" aria-hidden="true"><span></span><i></i></div>
+    <div id="break-indicator" class="break-indicator" hidden aria-live="polite">
+      <span id="break-label">BREAKING BLOCK</span>
+      <div class="break-track"><span id="break-progress"></span></div>
+    </div>
+
+    <div class="bottom-hud">
+      <div id="target-label" class="target-label">READY TO EXPLORE</div>
+      <nav id="hotbar" class="hotbar" aria-label="Block inventory"></nav>
+      <div class="hint"><span class="mouse-icon">◉</span> <span id="look-hint">CLICK TO LOOK AROUND</span></div>
+    </div>
+
+    <section id="overlay" class="overlay">
+      <div class="welcome-card">
+        <div class="cube-mark" aria-hidden="true"><span></span></div>
+        <p class="eyebrow">YOUR WORLD IS WAITING</p>
+        <h1>Build a little<br><span>more wild.</span></h1>
+        <p class="intro">A tiny block world, made for exploring.<br>Find a spot and make it your own.</p>
+        <button id="play-button" class="play-button" type="button">
+          <span>ENTER THE WORLD</span><span aria-hidden="true">↗</span>
+        </button>
+        <p id="load-status" class="load-status">A fresh world is being prepared…</p>
+        <p class="credit">MADE OF BLOCKS &amp; CURIOSITY</p>
+      </div>
+    </section>
+    <div id="error-message" class="error-message" role="alert" hidden></div>
+  </main>
+</body>
+</html>

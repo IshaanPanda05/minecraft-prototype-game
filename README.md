@@ -1,54 +1,59 @@
-# Block World
+# Block World — 3D browser prototype
 
-A small, original Minecraft-inspired block-building game written mostly in Java. It uses only Java's built-in Swing and AWT libraries, so no game engine or downloaded assets are required.
+A tiny first-person voxel sandbox made with Java, JavaScript, HTML, and CSS. Java runs a local web server; Three.js draws the 3D world in your browser. The world is generated fresh each time you restart the server.
 
-## Run it
+## Run the game
 
-Install a JDK (Java 17 or newer), then open PowerShell in this project folder and run:
+1. Install a JDK (Java 17 or newer) and a recent browser with WebGL 2.
+2. Open PowerShell in this project folder.
+3. Compile the Java web server and start it:
 
-```powershell
-javac -d out src\Main.java
-java -cp out Main
-```
+   ```powershell
+   javac -d out src\Main.java
+   java -cp out Main
+   ```
+
+4. Open **http://localhost:8080** in your browser.
+5. Click **ENTER THE WORLD** to capture your mouse. Press **Esc** to release it or pause.
+6. To use another port, start the server with a port number, for example `java -cp out Main 9000`.
+
+The game loads Three.js and its pointer-lock controls from jsDelivr, so an internet connection is needed when opening the page. If your browser blocks pointer lock, the game automatically falls back to mouse-movement controls.
 
 ## Controls
 
-- **A / D** or **left / right arrows**: move.
-- **Space**, **W**, or **up arrow**: jump.
-- **Left mouse button**: mine a block within five tiles; mined blocks go into your inventory.
-- **Right mouse button**: place the selected block, if you have one.
-- **1 / 2 / 3**: select dirt, stone, or grass.
+- **W / A / S / D:** move; hold **Shift** to walk slowly.
+- **Ctrl:** crouch and move carefully. Shift and Ctrl both prevent you from walking off a ledge; release Ctrl to stand up.
+- **Space:** jump.
+- **Move the mouse:** look around after entering the world.
+- **Hold left click:** break the block in the crosshair. Cracks and a progress bar show mining progress; releasing the mouse or changing targets resets it.
+- **Right click:** place the selected block on the block you're pointing at.
+- **1–6:** select grass, dirt, stone, sand, wood, or leaves.
+- **Esc:** release the mouse and pause.
 
-The world is freshly generated each time the game starts. This prototype does not save worlds yet.
+Blocks you mine are added to your inventory. Bedrock forms the bottom of the world and cannot be mined or placed. Block placement uses inventory and cannot put a block inside the player.
 
-## Lesson: read `src/Main.java` in order
+## How the project fits together
 
-The source is intentionally kept in one file so it is easy to follow as a beginner. Read it from top to bottom; each section introduces one idea used by the next section.
+- **`src/Main.java` — Java web server:** opens `web/` on `localhost`, serves the game files with their correct content types, rejects paths outside the web folder, and allows only `GET` requests.
+- **`web/index.html` — page structure:** declares the canvas container, control hints, inventory hotbar, start/pause overlay, and the Three.js import map.
+- **`web/style.css` — presentation:** styles the game HUD and adapts it to smaller screens. The 3D scene itself is drawn into a canvas by Three.js.
+- **`web/game.js` — game logic:** creates the 3D scene, builds a block world, handles first-person movement and collision, and implements mining, placing, and inventory.
 
-1. **Imports (lines 1-15):** Java libraries provide colors, drawing, keyboard/mouse events, random numbers, and Swing windows. Reusing these built-ins keeps the project dependency-free.
-2. **Class and constants (lines 17-35):** `Main` is both the game and its drawable panel. `implements` says it will receive timer, keyboard, and mouse events. Constants give names to screen dimensions, tile sizes, block IDs, and colors, so we avoid repeating unexplained numbers. `serialVersionUID` is Swing's serialization version marker.
-3. **Game state (lines 37-46):** `world[x][y]` stores the block ID at every grid location; `inventory[blockId]` stores counts. The player position and vertical speed use `double` so motion can be smoother than whole-pixel steps. Booleans remember held keys and whether the player is standing on a block.
-4. **Starting the window (lines 48-61):** `main` asks Swing to create the interface on its event thread. A `JFrame` is the window; adding the `Main` panel gives it the game screen. `pack()` uses the panel's preferred size. After showing the window, the code starts the game and requests keyboard focus.
-5. **Initializing the game (lines 63-78):** the constructor sets the screen size, generates the world, positions the player, and gives a starter inventory. `startGame` registers input listeners and starts a Swing timer that ticks about every 16 milliseconds. It is called after construction so the timer/listeners cannot use a partly initialized game.
-6. **Making terrain (lines 80-96):** the outer loop visits every column and the inner loop visits every row. A random surface height makes hills. Rows above it are air, the surface is grass, the next five rows are dirt, and deeper rows are stone.
-7. **Finding the ground (lines 98-105):** `surfaceAt` scans downward until it finds the first non-air tile. This lets the constructor put the player above the terrain rather than inside it.
-8. **Updating motion (lines 107-121):** key-state booleans decide horizontal movement. Gravity adds to vertical speed, with a cap so falling cannot accelerate forever. After each movement, collision handling corrects any overlap, and `repaint()` asks Swing to draw the next frame.
-9. **Collision helpers (lines 123-153):** the player's rectangle is converted to tile coordinates using `floor`. Each overlapping tile is checked. Side collisions stop horizontal movement; landing sets `onGround`; hitting a ceiling stops upward movement. `isSolid` treats the world's sides and bottom as solid, while the sky is open.
-10. **Camera (lines 155-158):** `cameraX` follows the player but clamps to the world edges. Rendering and mouse targeting both use the same camera offset, so what you click matches what you see.
-11. **Drawing the game (lines 160-185):** `paintComponent` clears the old frame, paints the sky, and draws only columns visible on screen. Every block ID chooses a color. The player and HUD are drawn afterward so they appear in front of the world.
-12. **HUD (lines 187-206):** text shows controls and inventory counts. The three colored squares are the hotbar; a white border marks the selected block.
-13. **Reach and mining (lines 208-228):** `isWithinReach` compares squared distances, avoiding an unnecessary square root. `mineBlock` converts mouse screen coordinates back to world tiles, validates bounds and reach, adds the block to inventory, and changes its world tile to air.
-14. **Placing blocks (lines 230-248):** `placeBlock` performs the same coordinate and reach checks. It only places into air when inventory is available, and it prevents placing a block inside the player's rectangle. Successful placement consumes one block.
-15. **Input events (lines 250-287):** the timer calls `updateGame`. Key presses set movement and select blocks; key releases stop movement. A left mouse press mines and a right press places. Empty listener methods are required by Java's listener interfaces but have no extra behavior.
+## Learn the game code in order
 
-### A few Java ideas in this project
+1. **`src/Main.java` imports and content types:** the JDK's `HttpServer` serves pages without an extra server dependency. A content-type map tells browsers how to interpret HTML, CSS, JavaScript, and images.
+2. **Java `main`:** reads the optional port (8080 by default), finds the web folder, binds only to your own computer, and starts the server.
+3. **Java `serveFile`:** permits `GET`, maps `/` to `index.html`, normalizes requested paths, and checks their real paths stay inside `web/`. This prevents a URL from reading other files on your computer.
+4. **HTML document:** the import map gives JavaScript short names for Three.js and its add-ons. The body provides named containers and buttons that JavaScript can update.
+5. **JavaScript constants and state:** world dimensions, movement settings, blocks, inventory, and pressed keys are kept in named variables instead of scattered magic numbers.
+6. **Three.js scene:** the scene, perspective camera, renderer, lights, materials, and raycaster create the 3D stage. `InstancedMesh` draws many blocks efficiently.
+7. **World generation:** each ground column gets a varied height above a solid bedrock floor. Winding cave tunnels are carved below ground, and trees grow on grass; their trunks and leaves can be mined.
+8. **Rendering terrain:** completely buried blocks are skipped. The visible blocks are batched by material into instance meshes, so the GPU can draw them in a few calls.
+9. **Hotbar and inventory:** buttons are created from the block list. Selecting a block updates the highlight; mining and placing update the displayed block counts.
+10. **Player physics:** the camera supplies forward and sideways movement directions. The player moves on each axis only when that step will not intersect a block; gravity, jumping, slow walking, and crouch-height collision update position.
+11. **Targeting and editing:** a ray from the center of the camera finds the block under the crosshair. Holding left-click fills a hardness-based mining bar and draws cracks on the target; releasing or aiming at another block resets progress. Bedrock is indestructible. Right-click places a block next to the hit face if inventory allows and the player is not in the way.
+12. **Input and animation:** keyboard, mouse, pointer-lock, and resize events update the game. A `requestAnimationFrame` loop advances physics and redraws the scene.
 
-- **Arrays:** `int[][]` is a grid (an array of columns, each containing rows); `int[]` is the inventory.
-- **Methods:** small named jobs such as `generateWorld`, `mineBlock`, and `drawHud` make the game easier to read and change.
-- **Constants:** `static final` values are shared fixed settings, such as `TILE_SIZE`.
-- **Events:** Swing calls listener methods when the timer, keyboard, or mouse produces an event.
-- **Coordinates:** the world uses tile coordinates, while drawing uses pixel coordinates. Multiplying by `TILE_SIZE` converts tiles to pixels.
+## Current prototype limitations
 
-## Ideas for the next lesson
-
-Add trees, caves, a save file, sound effects, or crafting. A good next step is adding a new block type: define an ID and color, generate or place it, then add it to the hotbar.
+Worlds are not saved yet, and there is no crafting, multiplayer, or server-side game state. This is a learning project, not a clone of Minecraft.
